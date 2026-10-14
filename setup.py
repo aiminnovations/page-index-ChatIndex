@@ -34,8 +34,10 @@ setup(
     },
     packages=find_packages(exclude=["tests", "tests.*", "examples", "examples.*", "docs", "docs.*"]),
     python_requires=">=3.8",
-    install_requires=read_requirements("requirements.txt"),
+    # The ctree package needs only these; anthropic is for the retrieval/ scripts.
+    install_requires=[r for r in read_requirements("requirements.txt") if not r.startswith("anthropic")],
     extras_require={
+        "retrieval": [r for r in read_requirements("requirements.txt") if r.startswith("anthropic")],
         "dev": read_requirements("requirements-dev.txt") if os.path.exists("requirements-dev.txt") else [],
         "docs": read_requirements("requirements-docs.txt") if os.path.exists("requirements-docs.txt") else [],
     },

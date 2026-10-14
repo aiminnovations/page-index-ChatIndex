@@ -8,9 +8,15 @@ CHATGPT_API_KEY = os.getenv("CHATGPT_API_KEY")
 
 
 def ChatGPT_API(model, prompt, api_key=CHATGPT_API_KEY, chat_history=None, temperature=0, max_tokens=None):
-    
+    """One chat completion. Any OpenAI-compatible endpoint: CHATINDEX_BASE_URL (e.g. a Portkey
+    gateway) and CHATINDEX_HEADERS (a JSON object of extra headers) are read per call, so the
+    caller never sets process-wide OPENAI_* variables. max_tokens defaults to
+    CHATINDEX_MAX_TOKENS (1024): providers such as Anthropic require one."""
     max_retries = 10
-    client = openai.OpenAI(api_key=api_key)
+    client = openai.OpenAI(api_key=api_key, base_url=os.getenv("CHATINDEX_BASE_URL") or None,
+                           default_headers=json.loads(os.getenv("CHATINDEX_HEADERS") or "{}"))
+    if max_tokens is None:
+        max_tokens = int(os.getenv("CHATINDEX_MAX_TOKENS", "1024"))
     for i in range(max_retries):
         try:
             if chat_history:
@@ -25,8 +31,7 @@ def ChatGPT_API(model, prompt, api_key=CHATGPT_API_KEY, chat_history=None, tempe
                 "messages": messages,
                 "temperature": temperature,
             }
-            if max_tokens is not None:
-                api_kwargs["max_tokens"] = max_tokens
+            api_kwargs["max_tokens"] = max_tokens
             
             response = client.chat.completions.create(**api_kwargs)
    
